@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id            String            @id @default(cuid())
+  name          String
+  description   String?
+  flowsheet     String            // JSON data
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  
+  simulationLogs SimulationLog[]
+  unitOperations UnitOperation[]
+  streams       Stream[]
+  results       SimulationResult[]
+}
+
+model SimulationLog {
+  id          String   @id @default(cuid())
+  projectId   String?
+  type        String   // 'ACTION', 'WARNING', 'ERROR', 'EXECUTION'
+  message     String
+  details     String?  // JSON data
+  timestamp   DateTime @default(now())
+  
+  project     Project? @relation(fields: [projectId], references: [id])
+}
+
+model UnitOperation {
+  id          String   @id @default(cuid())
+  projectId   String?
+  type        String
+  name        String
+  x           Float
+  y           Float
+  parameters  String   // JSON data
+  inputs      String   // JSON array of stream IDs
+  outputs     String   // JSON array of stream IDs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  project     Project? @relation(fields: [projectId], references: [id])
+}
+
+model Stream {
+  id          String   @id @default(cuid())
+  projectId   String?
+  fromUnit    String?
+  toUnit      String?
+  flowRate    Float
+  composition String   // JSON data
+  moisture    Float
+  temperature Float?
+  pressure    Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  project     Project? @relation(fields: [projectId], references: [id])
+}
+
+model SimulationResult {
+  id            String   @id @default(cuid())
+  projectId     String?
+  unitOperation String?
+  streamId      String?
+  parameter     String
+  value         Float
+  unit          String?
+  timestamp     DateTime @default(now())
+  
+  project       Project? @relation(fields: [projectId], references: [id])
+}
